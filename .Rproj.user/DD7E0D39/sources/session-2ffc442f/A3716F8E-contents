@@ -1,0 +1,121 @@
+print(paste0("libPaths are: ", paste0(.libPaths(), collapse = " | ")))
+
+library(dplyr)
+library(stringr)
+library(haven, include.only = 'read_sas')
+library(rlist, include.only = 'list.clean')
+library(survival)
+library(kableExtra)
+library(ggplot2)
+library(extrafont)
+
+# R.version
+# 4.2.1
+
+# get library versions
+sessionInfo()
+
+# import fonts
+# font_import()
+
+# load fonts
+loadfonts(device = "win")
+
+# basic functions
+`%!in%` <- Negate(`%in%`)
+not.na <- Negate(is.na)
+not.null <- Negate(is.null)
+not.infinite <- Negate(is.infinite)
+
+
+fn_measure_time <- function(time_pre, title = "", units = "secs") {
+  if (units %!in% c("secs", "mins")) {
+    stop("Error: parameter <units> must be secs or mins")
+  }
+  print(paste0(title, " took ", (Sys.time() - time_pre) %>% as.numeric(units = units), " ", units))
+}
+
+str_split_df <- function(string, pattern) {
+  plyr::ldply(stringr::str_split(string, pattern), rbind)
+}
+
+fn_check_dir <- function(path) {
+  dir.create(path = path, showWarnings = F, recursive = T)
+}
+
+not.empty <- function(x) {not.na(x) & x != ""}
+
+mutate_cond <- function(.data, condition, ..., envir = parent.frame()) {
+  condition <- eval(substitute(condition), .data, envir)
+  .data[condition, ] <- .data[condition, ] %>% mutate(...)
+  .data
+}
+
+# function for printing progression of
+fn_print_progress <- function(i_prog_4234, i_total_4234) {
+  cat("\r", i_prog_4234 / i_total_4234)
+}
+
+fn_count_total <- function(i_total_4234) {
+  i_total_4234 <<- i_total_4234
+}
+
+fn_count_progress <- function(i_prog_4234) {
+  i_total_4234 <<- i_total_4234
+}
+
+fn_timer_start <- function() {
+  time_start_4234 <<- Sys.time()
+}
+
+fn_timer_end <- function(name_job = "Job", unit_job = "mins") {
+  if(time_start_4234 %>% is.null) {print("timer had not started")}
+  paste(name_job, "ended after", difftime(Sys.time(), time_start_4234, units = unit_job) %>% round(2), unit_job) %>% print
+}
+
+# return n characters of x from left
+fn_left <- function(x, n) {
+  return(substr(x = x, start = 1, stop = n))
+}
+
+# return n characters of x from right
+fn_right <- function(x, n) {
+  return(substr(x = x, start = nchar(x) - n + 1, stop = nchar(x)))
+}
+
+# detach all packages
+fn_detach.all <- function() {
+  # take out basic packages that won't be detached
+  basic.packages <- c("package:stats", "package:graphics",
+                      "package:grDevices","package:utils",
+                      "package:datasets","package:methods",
+                      "package:base")
+
+  # search() gives packages and R objects
+  # subset a vector of packages from base::search()
+  package.list <- base::search()[ifelse(unlist(gregexpr("package:", base::search()))==1,TRUE,FALSE)]
+
+  # take out basic packages
+  package.list <- setdiff(package.list,basic.packages)
+
+  # for-loop to detach all packages (except for basic.packages)
+  if (length(package.list)>0)  for (package in package.list) detach(package, character.only=TRUE)
+
+}
+
+# Setting for kable
+mykable <- function(temp,
+                    align = "c", position = "center",
+                    mytitle = "",
+                    fullwidth = T) {
+  temp %>% kable(align = paste(rep(align, ncol(temp), caption = mytitle),
+                               collapse = "")) %>% kable_styling(full_width = fullwidth, position = position)}
+
+# theme for ggplot
+theme_font <- function(font = "Times New Roman") {
+  theme(text = element_text(family = font),
+        title = element_text(family = font),
+        axis.title = element_text(family = font),
+        axis.text = element_text(family = font),
+        legend.text = element_text(family = font))
+}
